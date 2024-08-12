@@ -9,11 +9,13 @@
 	•	Email (VARCHAR2(100))
 	•	Phone (VARCHAR2(20))
 	•	Created_At (DATE)
+ 
 	•	Orders (Заказы):
 	•	Order_ID (NUMBER) - первичный ключ
 	•	Customer_ID (NUMBER) - внешний ключ, ссылающийся на Customers.Customer_ID
 	•	Order_Date (DATE)
 	•	Total_Amount (NUMBER)
+ 
 	•	Order_Items (Товары в заказе):
 	•	Order_Item_ID (NUMBER) - первичный ключ
 	•	Order_ID (NUMBER) - внешний ключ, ссылающийся на Orders.Order_ID
