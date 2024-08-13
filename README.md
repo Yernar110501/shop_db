@@ -29,3 +29,8 @@ Version 19.17.0.0.0
 
 ## Логика обработчика ошибок и логгера 
 ![image](https://github.com/user-attachments/assets/9e46deee-20b7-4471-a4fc-3674fbc38c8e)
+
+
+##create_customer
+создание клиента идет по следующему флоу в пакете order_mangement.create_customer
+![alt text](image.png)
