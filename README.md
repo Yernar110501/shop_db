@@ -33,7 +33,7 @@ Version 19.17.0.0.0
 
 ## create_customer
 создание клиента идет по следующему флоу в пакете order_mangement.create_customer
-![alt text](image.png)
+![alt text](assets/image.png)
 
 ## create_order_from_xml
 нужно создать заказ с формата xml
@@ -57,8 +57,12 @@ Version 19.17.0.0.0
 </Order>
 ```
 
-![alt text](image-1.png)
+![alt text](assets/image-1.png)
 
 ## get_customer_orders
-![alt text](image-2.png)
+![alt text](assets/image-2.png)
 Оставил таким образом, что он будет возвращать курсор и создал пример функции get_customer_orders_xml, чтобы показать как его можно будет в дальнейшем переиспользовать
+
+## update_order_total
+
+работает как закоменченный блок апдейт. с триггером тоже можно сделать, но если будет триггер нужно будет убрать вызов процедуры.
