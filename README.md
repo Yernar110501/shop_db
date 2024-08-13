@@ -71,4 +71,61 @@ Version 19.17.0.0.0
     update_order_total(v_order_id);
 ```
 
+## sync_order_with_api
+для логирования ответа сгенерил такие ответы, и будем представлять, что сервер будет так отвечать)
+
+```
+{
+    "status": "success",
+    "message": "Order has been successfully created.",
+    "order_id": 123,
+    "customer_id": 1,
+    "order_date": "2024-07-02",
+    "total_amount": 30.00
+}
+
+{
+    "status": "error",
+    "message": "Validation failed for the provided order data.",
+    "errors": [
+        {
+            "field": "items",
+            "message": "Product names cannot be empty."
+        },
+        {
+            "field": "quantity",
+            "message": "Quantity must be greater than zero."
+        }
+    ]
+}
+
+{
+    "status": "error",
+    "message": "Customer with the given ID does not exist.",
+    "customer_id": 1
+}
+
+{
+    "status": "error",
+    "message": "An unexpected error occurred while processing the order.",
+    "error_details": "Database connection timeout"
+}
+
+{
+    "status": "error",
+    "message": "An order with the same ID already exists.",
+    "order_id": 123
+}
+
+{
+    "status": "error",
+    "message": "The request is missing required fields.",
+    "missing_fields": [
+        "order_date",
+        "total_amount"
+    ]
+}
+
+```
+
 
