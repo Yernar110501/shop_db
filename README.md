@@ -37,6 +37,7 @@ Version 19.17.0.0.0
 
 ## create_order_from_xml
 нужно создать заказ с формата xml
+```
 <?xml version="1.0" encoding="UTF-8"?>
 <Order>
     <Customer_ID>1</Customer_ID>
@@ -53,4 +54,6 @@ Version 19.17.0.0.0
             <Price>20.00</Price>
         </Item>
     </Items>
-</Order>
+</Order>```
+
+![alt text](image-1.png)
