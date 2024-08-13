@@ -27,3 +27,5 @@ Version 19.17.0.0.0
 	•	Price (NUMBER)
  ![Пустой диаграммой](https://github.com/user-attachments/assets/f413c676-215b-46ae-9259-f1105db63c3f)
 
+## Логика обработчика ошибок и логгера 
+![image](https://github.com/user-attachments/assets/9e46deee-20b7-4471-a4fc-3674fbc38c8e)
