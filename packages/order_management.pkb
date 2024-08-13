@@ -76,9 +76,10 @@ begin
     end loop;
     close p_items;
 
-    update orders
-    set total_amount = v_total_amount
-    where order_id = v_order_id;
+    -- update orders
+    -- set total_amount = v_total_amount
+    -- where order_id = v_order_id;
+    update_order_total(v_order_id);
 
     commit;
 exception
@@ -229,6 +230,31 @@ exception
     return null;
 end;
 --*************************
+PROCEDURE update_order_total (
+    p_order_id IN NUMBER
+) AS
+    v_total_amount orders.total_amount%TYPE := 0;
+BEGIN
+    SELECT SUM(quantity * price)
+    INTO v_total_amount
+    FROM order_items
+    WHERE order_id = p_order_id;
+
+    UPDATE orders
+    SET total_amount = v_total_amount
+    WHERE order_id = p_order_id;
+
+    COMMIT;
+EXCEPTION
+    WHEN OTHERS THEN
+        log_error(
+            p_error_code    => SQLCODE,
+            p_error_message => SQLERRM,
+            p_procedure_name => 'update_order_total'
+        );
+        ROLLBACK;
+        RAISE;
+END update_order_total;
 --*************************
 
 end order_management;
