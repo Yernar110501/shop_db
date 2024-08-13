@@ -151,7 +151,83 @@ begin
   
 end create_order_from_xml;
 --*************************
+function get_customer_orders ( p_customer_id in number) return sys_refcursor is
+v_exists number;
+  l_cursor sys_refcursor;
+begin
+    select count(*) into v_exists
+    from customers
+    where customer_id = p_customer_id;
+  
+    if v_exists = 0 then
+        raise custom_errors.exc_customer_doesnt_exists;
+    end if;
+ 
+  open l_cursor for
+    select order_id, order_date, total_amount
+    from orders
+    where customer_id = p_customer_id;
+  return l_cursor;
+exception
+    when custom_errors.exc_customer_doesnt_exists then
+        log_error(
+            p_error_code    => -20004,
+            p_error_message => 'customer does not exist',
+            p_procedure_name => 'get_customer_orders'
+        );
+        raise;
+    when others then
+        log_error(
+            p_error_code    => sqlcode,
+            p_error_message => sqlerrm,
+            p_procedure_name => 'get_customer_orders'
+        );
+        raise;
+end;
 --*************************
+function get_customer_orders_xml (p_customer_id in number) 
+return clob 
+is
+  l_cursor sys_refcursor;
+  l_xml clob;
+begin
+  l_cursor := get_customer_orders(p_customer_id);
+
+  if l_cursor is not null then
+    select xmlelement(
+             "orders",
+             xmlagg(
+               xmlelement(
+                 "order",
+                 xmlforest(
+                   order_id as "id",
+                   order_date as "date",
+                   total_amount as "total_amount"
+                 )
+               )
+             )
+           ).getclobval()
+    into l_xml
+    from table(
+             xmltable(
+               '/orders/order'
+               passing xmltype(l_cursor)
+             )
+           );
+
+    return l_xml;
+  else
+    return null;
+  end if;
+exception
+  when others then
+    log_error(
+      p_error_code    => sqlcode,
+      p_error_message => sqlerrm,
+      p_procedure_name => 'get_customer_orders_as_xml'
+    );
+    return null;
+end;
 --*************************
 --*************************
 
