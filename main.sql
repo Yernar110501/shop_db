@@ -82,5 +82,6 @@ create table network_log (
     status_code     number,
     osuser          varchar2(100) default SYS_CONTEXT('USERENV', 'OS_USER'),
     error_message   varchar2(4000),
-    procedure_name  varchar2(255)
+    procedure_name  varchar2(255),
+    created_at      date default sysdate
 );
