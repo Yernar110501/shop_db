@@ -31,6 +31,26 @@ Version 19.17.0.0.0
 ![image](https://github.com/user-attachments/assets/9e46deee-20b7-4471-a4fc-3674fbc38c8e)
 
 
-##create_customer
+## create_customer
 создание клиента идет по следующему флоу в пакете order_mangement.create_customer
 ![alt text](image.png)
+
+## create_order_from_xml
+нужно создать заказ с формата xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Order>
+    <Customer_ID>1</Customer_ID>
+    <Order_Date>2024-07-02</Order_Date>
+    <Items>
+        <Item>
+            <Product_Name>Product 1</Product_Name>
+            <Quantity>2</Quantity>
+            <Price>10.00</Price>
+        </Item>
+        <Item>
+            <Product_Name>Product 2</Product_Name>
+            <Quantity>1</Quantity>
+            <Price>20.00</Price>
+        </Item>
+    </Items>
+</Order>
