@@ -9,7 +9,7 @@ create or replace package body order_management is
         select count(*)
         into l_email_count
         from customers
-        where email = p_email;
+        where email = upper(p_email);
 
         if l_email_count > 0 then
             raise custom_errors.exc_email_exists;
@@ -25,7 +25,7 @@ create or replace package body order_management is
         end if;
 
         insert into customers(customer_id, name, email, phone)
-        values(shop_db_main_seq.nextval, p_name, p_email, p_phone);
+        values(shop_db_main_seq.nextval, p_name, upper(p_email), p_phone);
         log_error(0, 'Customer created successfully', 'create_customer');
     
     exception
