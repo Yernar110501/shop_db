@@ -10,8 +10,9 @@ create or replace package order_management is
 --*************************
     function get_customer_orders_xml (p_customer_id in number) return clob;
 --*************************
-procedure update_order_total (p_order_id in number);
+    procedure update_order_total (p_order_id in number);
 --*************************
---*************************
+    procedure sync_order_with_api (p_order_id        in number,
+                                   p_customer_id     in number);
 --*************************
 end order_management;

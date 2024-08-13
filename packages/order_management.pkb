@@ -230,31 +230,179 @@ exception
     return null;
 end;
 --*************************
-PROCEDURE update_order_total (
-    p_order_id IN NUMBER
-) AS
-    v_total_amount orders.total_amount%TYPE := 0;
-BEGIN
-    SELECT SUM(quantity * price)
-    INTO v_total_amount
-    FROM order_items
-    WHERE order_id = p_order_id;
+procedure update_order_total (
+    p_order_id in number
+) as
+    v_total_amount orders.total_amount%type := 0;
+begin
+    select sum(quantity * price)
+    into v_total_amount
+    from order_items
+    where order_id = p_order_id;
 
-    UPDATE orders
-    SET total_amount = v_total_amount
-    WHERE order_id = p_order_id;
+    update orders
+    set total_amount = v_total_amount
+    where order_id = p_order_id;
 
-    COMMIT;
-EXCEPTION
-    WHEN OTHERS THEN
+    commit;
+exception
+    when others then
         log_error(
-            p_error_code    => SQLCODE,
-            p_error_message => SQLERRM,
+            p_error_code    => sqlcode,
+            p_error_message => sqlerrm,
             p_procedure_name => 'update_order_total'
         );
-        ROLLBACK;
-        RAISE;
-END update_order_total;
+        rollback;
+        raise;
+end update_order_total;
 --*************************
+procedure build_request_body (
+    p_order_id      in number,
+    p_customer_id   in number,
+    p_response_body out clob
+) is
+begin
+    select json_object(
+               'order_id'      value p_order_id,
+               'customer_id'   value p_customer_id,
+               'order_date'    value (select o.order_date
+                                      from orders o
+                                      where o.order_id = p_order_id
+                                        and o.customer_id = p_customer_id),
+               'total_amount'  value (select o.total_amount
+                                      from orders o
+                                      where o.order_id = p_order_id
+                                        and o.customer_id = p_customer_id),
+               'items'         value (
+                   select json_arrayagg(
+                              json_object(
+                                  'product_name' value oi.product_name,
+                                  'quantity'     value oi.quantity,
+                                  'price'        value oi.price
+                              )
+                   )
+                   from order_items oi
+                   where oi.order_id = p_order_id
+               )
+           ) into p_response_body
+    from dual;
+end build_request_body;
+--*************************
+procedure sync_order_with_api (
+    p_order_id        in number,
+    p_customer_id     in number
+) is
+    l_url             varchar2(4000) := 'http://example.com/api/orders';
+    l_http_req        utl_http.req;
+    l_http_resp       utl_http.resp;
+    l_request_body    clob;
+    l_response_body   clob;
+    l_status_code     number;
+    l_start_time      timestamp := systimestamp;
+    l_end_time        timestamp;
+    l_error_message   varchar2(4000);
+begin
+    build_request_body(
+        p_order_id      => p_order_id,
+        p_customer_id   => p_customer_id,
+        p_order_date    => p_order_date,
+        p_total_amount  => p_total_amount,
+        p_response_body => l_request_body
+    );
+
+    begin
+        l_http_req := utl_http.begin_request(
+            p_url          => l_url,
+            p_http_method   => 'POST',
+            p_http_version  => 'HTTP/1.1'
+        );
+
+        utl_http.set_header(l_http_req, 'Content-Type', 'application/json');
+        -- UTL_HTTP.set_header(l_http_req, 'Authorization', 'Basic ' || UTL_ENCODE.base64_encode('your_username:your_password'));--если будут данные для авторизации, хотя это только для базовой авторизаци
+
+        utl_http.write_text(l_http_req, l_request_body);
+
+        l_http_resp := utl_http.get_response(l_http_req);
+        l_status_code := l_http_resp.status_code;
+
+        utl_http.read_text(l_http_resp, l_response_body);
+        utl_http.end_response(l_http_resp);
+
+        l_end_time := systimestamp;
+
+        log_network(
+            p_request_body    => l_request_body,
+            p_response_body   => l_response_body,
+            p_response_time   => l_end_time,
+            p_status_code     => l_status_code,
+            p_error_message   => null,
+            p_procedure_name  => 'sync_order_with_api'
+        );
+
+        if l_status_code != 200 then
+            l_error_message := 'api returned error status code ' || l_status_code;
+            raise custom_errors.exc_api_error;
+        end if;
+
+    exception
+        when utl_http.end_of_body then
+            l_response_body := 'end of body reached prematurely.';
+            l_status_code := -1;
+            l_error_message := 'end of body reached prematurely.';
+
+            log_error(
+                p_error_code    => l_status_code,
+                p_error_message => l_error_message,
+                p_procedure_name => 'sync_order_with_api'
+            );
+            
+            log_network(
+                p_request_body    => l_request_body,
+                p_response_body   => l_response_body,
+                p_response_time   => systimestamp,
+                p_status_code     => l_status_code,
+                p_error_message   => l_error_message,
+                p_procedure_name  => 'sync_order_with_api'
+            );
+
+        when custom_errors.exc_api_error then
+            log_error(
+                p_error_code    => l_status_code,
+                p_error_message => l_error_message,
+                p_procedure_name => 'sync_order_with_api'
+            );
+
+            log_network(
+                p_request_body    => l_request_body,
+                p_response_body   => l_response_body,
+                p_response_time   => systimestamp,
+                p_status_code     => l_status_code,
+                p_error_message   => l_error_message,
+                p_procedure_name  => 'sync_order_with_api'
+            );
+            
+        when others then
+            l_response_body := sqlerrm;
+            l_status_code := sqlcode;
+            l_error_message := sqlerrm;
+
+            log_error(
+                p_error_code    => l_status_code,
+                p_error_message => l_error_message,
+                p_procedure_name => 'sync_order_with_api'
+            );
+
+            log_network(
+                p_request_body    => l_request_body,
+                p_response_body   => l_response_body,
+                p_response_time   => systimestamp,
+                p_status_code     => l_status_code,
+                p_error_message   => l_error_message,
+                p_procedure_name  => 'sync_order_with_api'
+            );
+            
+            raise;
+    end;
+end;
 
 end order_management;
