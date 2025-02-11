@@ -85,3 +85,8 @@ create table network_log (
     procedure_name  varchar2(255),
     created_at      date default sysdate
 );
+
+
+Create table test(
+Test varchar2(256 char)
+)
